@@ -1,7 +1,11 @@
 package com.kenzo.logicbase
 
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
@@ -9,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -22,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,10 +40,16 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 
 @Composable
-fun GameScreen() {
-    var data by remember { mutableStateOf(Cell.fromLogicData(LogicData)) }
+fun GameScreen(
+    logicData: List<List<Boolean>>,
+    nextGame: () -> Unit
+) {
+    val originalData by rememberUpdatedState(newValue = Cell.fromLogicData(logicData))
+    var data by remember { mutableStateOf(originalData) }
     var changingTo by remember { mutableStateOf(CellState.Empty) }
     var paintMode by remember { mutableStateOf(CellState.Painted) }
     var isSuccessive by remember { mutableStateOf(false) }
@@ -45,9 +57,13 @@ fun GameScreen() {
     var selectedRowIndex by remember { mutableStateOf(-1) }
     var selectedColumnIndex by remember { mutableStateOf(-1) }
     var touchMode by remember { mutableStateOf(false) }
+    var cleared by remember { mutableStateOf(false) }
 
     fun updateData(newData: List<Cell>) {
         data = newData
+        if (data.all { it.state == CellState.Painted && it.answer || it.state != CellState.Painted && !it.answer }) {
+            cleared = true
+        }
     }
 
     Column(
@@ -128,7 +144,6 @@ fun GameScreen() {
                         }
                     }
                     if (isSuccessive) {
-                        Log.v("@@@", "GameScreen GameScreen: ${data.first()}")
                         updateData(
                             data.stateSuccessiveUpdated(
                                 selectedRowIndex,
@@ -143,7 +158,6 @@ fun GameScreen() {
                     paintMode = CellState.Painted
                     changingTo =
                         CellState.nextForceState(data.cellState(selectedRowIndex, selectedColumnIndex), paintMode)
-                    Log.v("@@@", "GameScreen GameScreen: ${data.first()}")
                     updateData(data.stateForceUpdated(selectedRowIndex, selectedColumnIndex, changingTo))
                     isSuccessive = true
                 },
@@ -164,7 +178,14 @@ fun GameScreen() {
                 }
             )
         }
-
+        ClearDialog(
+            cleared = cleared,
+            onReset = {
+                nextGame()
+                data = originalData
+                cleared = false
+            }
+        )
         DebugButtons(
             data = data,
             updateData = ::updateData,
@@ -401,6 +422,43 @@ fun Selection(
                     size = cellSize + strokeWidth,
                     strokeWidth = strokeWidth
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun ClearDialog(
+    cleared: Boolean,
+    onReset: () -> Unit
+) {
+    AnimatedVisibility(
+        visible = cleared,
+        enter = fadeIn(),
+        exit = fadeOut()
+    ) {
+        Dialog(
+            onDismissRequest = onReset,
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White.copy(alpha = 0.3f))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1f)
+                ) {
+                    Text(
+                        text = "Cleared",
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+                Button(onClick = onReset) {
+                    Text(text = "Next")
+                }
             }
         }
     }
