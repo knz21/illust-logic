@@ -1,6 +1,5 @@
 package com.kenzo.logicbase
 
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -212,8 +211,8 @@ fun Display(
         Row(
             Modifier.fillMaxWidth()
         ) {
-            RowNumberSpace(data = data)
-            ColumnNumbers(
+            RowHintsSpace(data = data)
+            ColumnHints(
                 modifier = Modifier
                     .fillMaxWidth()
                     .onSizeChanged { fieldSize = it.width },
@@ -223,7 +222,7 @@ fun Display(
         Row(
             Modifier.fillMaxWidth()
         ) {
-            RowNumbers(
+            RowHints(
                 modifier = Modifier
                     .width(with(LocalDensity.current) { (screenWidth - fieldSize).toDp() })
                     .height(with(LocalDensity.current) { fieldSize.toDp() }),
@@ -237,7 +236,7 @@ fun Display(
 }
 
 @Composable
-fun ColumnNumbers(
+fun ColumnHints(
     modifier: Modifier,
     data: List<Cell>
 ) {
@@ -245,13 +244,13 @@ fun ColumnNumbers(
         modifier = modifier,
         verticalAlignment = Alignment.Bottom
     ) {
-        data.toColumnNumbers().forEach {
+        data.toColumnHints().forEach {
             Column(
                 modifier = Modifier.weight(1f),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                it.forEach { number ->
-                    HintNumber(number = number)
+                it.forEach { hint ->
+                    HintNumber(hint = hint)
                 }
             }
         }
@@ -259,7 +258,7 @@ fun ColumnNumbers(
 }
 
 @Composable
-fun RowNumbers(
+fun RowHints(
     modifier: Modifier,
     data: List<Cell>
 ) {
@@ -267,13 +266,13 @@ fun RowNumbers(
         modifier = modifier,
         horizontalAlignment = Alignment.End
     ) {
-        data.toRowNumbers().forEach {
+        data.toRowHints().forEach {
             Row(
                 modifier = Modifier.weight(1f),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                it.forEach { number ->
-                    HintNumber(number = number)
+                it.forEach { hint ->
+                    HintNumber(hint = hint)
                 }
             }
         }
@@ -281,20 +280,20 @@ fun RowNumbers(
 }
 
 @Composable
-fun RowNumberSpace(
+fun RowHintsSpace(
     data: List<Cell>
 ) {
     Row(
         Modifier.alpha(0f)
     ) {
-        repeat(data.toRowNumbers().maxOf { it.size }) {
-            HintNumber(number = 99)
+        repeat(data.toRowHints().maxOf { it.size }) {
+            HintNumber(hint = 99)
         }
     }
 }
 
 @Composable
-fun HintNumber(number: Int) {
+fun HintNumber(hint: Int) {
     val density = LocalDensity.current
     Box(
         modifier = Modifier
@@ -303,7 +302,7 @@ fun HintNumber(number: Int) {
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = number.toString(),
+            text = hint.toString(),
             fontSize = with(density) { 12.dp.toSp() },
             fontWeight = FontWeight.Bold
         )

@@ -81,27 +81,27 @@ fun List<Cell>.rows(index: Int): List<Cell> = filter { it.rowIndex == index }
 
 fun List<Cell>.columns(index: Int): List<Cell> = filter { it.colIndex == index }
 
-fun List<Cell>.toNumbers(): List<Int> {
-    var number = 0
-    val numbers = mutableListOf<Int>()
+fun List<Cell>.toHints(): List<Int> {
+    var hint = 0
+    val hints = mutableListOf<Int>()
     forEach {
         if (it.answer) {
-            number++
-        } else if (number > 0) {
-            numbers.add(number)
-            number = 0
+            hint++
+        } else if (hint > 0) {
+            hints.add(hint)
+            hint = 0
         }
     }
-    if (number > 0) {
-        numbers.add(number)
+    if (hint > 0) {
+        hints.add(hint)
     }
-    return numbers
+    return hints
 }
 
-fun List<Cell>.toRowNumbers(): List<List<Int>> = (0 until rowCount()).map { row ->
-    rows(row).toNumbers()
+fun List<Cell>.toRowHints(): List<List<Int>> = (0 until rowCount()).map { row ->
+    rows(row).toHints()
 }
 
-fun List<Cell>.toColumnNumbers(): List<List<Int>> = (0 until columnCount()).map { col ->
-    columns(col).toNumbers()
+fun List<Cell>.toColumnHints(): List<List<Int>> = (0 until columnCount()).map { col ->
+    columns(col).toHints()
 }
