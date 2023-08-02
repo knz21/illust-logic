@@ -26,7 +26,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,11 +43,12 @@ import androidx.compose.ui.window.DialogProperties
 
 @Composable
 fun GameScreen(
-    logicData: List<List<Boolean>>,
-    nextGame: () -> Unit
+    cells: List<Cell>,
+    nextGame: () -> Unit,
+    updateData: (data : List<Cell>) -> Unit,
+    forceUpdateData: (row: Int, col: Int, paintMode: CellState) -> CellState,
+    successiveUpdateData: (row: Int, col: Int, state: CellState, paintMode: CellState) -> Unit
 ) {
-    val originalData by rememberUpdatedState(newValue = Cell.fromLogicData(logicData))
-    var data by remember { mutableStateOf(originalData) }
     var changingTo by remember { mutableStateOf(CellState.Empty) }
     var paintMode by remember { mutableStateOf(CellState.Painted) }
     var isSuccessive by remember { mutableStateOf(false) }
@@ -56,27 +56,18 @@ fun GameScreen(
     var selectedRowIndex by remember { mutableStateOf(-1) }
     var selectedColumnIndex by remember { mutableStateOf(-1) }
     var touchMode by remember { mutableStateOf(false) }
-    var cleared by remember { mutableStateOf(false) }
-
-    fun updateData(newData: List<Cell>) {
-        data = newData
-        if (data.all { it.state == CellState.Painted && it.answer || it.state != CellState.Painted && !it.answer }) {
-            cleared = true
-        }
-    }
 
     Column(
         Modifier
             .fillMaxWidth()
             .onSizeChanged { screenWidth = it.width }
     ) {
-        Display(data = data) {
+        Display(data = cells) {
             Field(
-                data = data,
+                data = cells,
                 startPaint = { row, col ->
                     if (touchMode) {
-                        changingTo = CellState.nextForceState(data.cellState(row, col), paintMode)
-                        updateData(data.stateForceUpdated(row, col, changingTo))
+                        changingTo = forceUpdateData(row, col, paintMode)
                     } else {
                         selectedRowIndex = row
                         selectedColumnIndex = col
@@ -84,8 +75,7 @@ fun GameScreen(
                 },
                 paint = { row, col ->
                     if (touchMode) {
-
-                        updateData(data.stateSuccessiveUpdated(row, col, changingTo, paintMode))
+                        successiveUpdateData(row, col, changingTo, paintMode)
                     } else {
                         selectedRowIndex = row
                         selectedColumnIndex = col
@@ -93,7 +83,7 @@ fun GameScreen(
                 }
             )
             Selection(
-                data = data,
+                data = cells,
                 selectedRowIndex = selectedRowIndex,
                 selectedColumnIndex = selectedColumnIndex
             )
@@ -121,7 +111,7 @@ fun GameScreen(
                         selectedColumnIndex = 0
                         selectedRowIndex = 0
                     } else {
-                        val maxIndex = data.rowCount() - 1
+                        val maxIndex = cells.rowCount() - 1
                         when (it) {
                             Direction.Up -> {
                                 selectedRowIndex = if (selectedRowIndex > 0) selectedRowIndex - 1 else maxIndex
@@ -143,21 +133,12 @@ fun GameScreen(
                         }
                     }
                     if (isSuccessive) {
-                        updateData(
-                            data.stateSuccessiveUpdated(
-                                selectedRowIndex,
-                                selectedColumnIndex,
-                                changingTo,
-                                paintMode
-                            )
-                        )
+                        successiveUpdateData(selectedRowIndex, selectedColumnIndex, changingTo, paintMode)
                     }
                 },
                 onPaintButtonPress = {
                     paintMode = CellState.Painted
-                    changingTo =
-                        CellState.nextForceState(data.cellState(selectedRowIndex, selectedColumnIndex), paintMode)
-                    updateData(data.stateForceUpdated(selectedRowIndex, selectedColumnIndex, changingTo))
+                    changingTo = forceUpdateData(selectedRowIndex, selectedColumnIndex, paintMode)
                     isSuccessive = true
                 },
                 onPaintButtonRemove = {
@@ -166,9 +147,7 @@ fun GameScreen(
                 },
                 onCheckButtonPress = {
                     paintMode = CellState.Checked
-                    changingTo =
-                        CellState.nextForceState(data.cellState(selectedRowIndex, selectedColumnIndex), paintMode)
-                    updateData(data.stateForceUpdated(selectedRowIndex, selectedColumnIndex, changingTo))
+                    changingTo = forceUpdateData(selectedRowIndex, selectedColumnIndex, paintMode)
                     isSuccessive = true
                 },
                 onCheckButtonRemove = {
@@ -178,16 +157,16 @@ fun GameScreen(
             )
         }
         ClearDialog(
-            cleared = cleared,
+            cleared = cells.all {
+                it.state == CellState.Painted && it.answer || it.state != CellState.Painted && !it.answer
+            },
             onReset = {
                 nextGame()
-                data = originalData
-                cleared = false
             }
         )
         DebugButtons(
-            data = data,
-            updateData = ::updateData,
+            data = cells,
+            updateData = updateData,
             resetSelected = {
                 selectedRowIndex = -1
                 selectedColumnIndex = -1

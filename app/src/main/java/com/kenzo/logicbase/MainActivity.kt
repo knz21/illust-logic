@@ -8,22 +8,30 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.kenzo.logicbase.ui.theme.LogicBaseTheme
-import kotlin.random.Random
+
+private const val DataSize = 3
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             LogicBaseTheme {
-                var logicData by remember { mutableStateOf(createLogicData(DataSize)) }
+                val logicCreator = remember { LogicCreator(DataSize) }
+                var cells by remember { mutableStateOf(Cell.fromLogicData(logicCreator.create())) }
                 GameScreen(
-                    logicData = logicData,
-                    nextGame = { logicData = createLogicData(DataSize) }
+                    cells = cells,
+                    nextGame = { cells = Cell.fromLogicData(logicCreator.create()) },
+                    updateData = { cells = it },
+                    forceUpdateData = { row, col, paintMode ->
+                        val state = CellState.nextForceState(cells.cellState(row, col), paintMode)
+                        cells = cells.stateForceUpdated(row, col, state)
+                        state
+                    },
+                    successiveUpdateData = { row, col, changingTo, paintMode ->
+                        cells = cells.stateSuccessiveUpdated(row, col, changingTo, paintMode)
+                    }
                 )
             }
         }
     }
 }
-
-const val DataSize = 3
-fun createLogicData(dataSize: Int): List<List<Boolean>> = List(dataSize) { List(dataSize) { Random.nextInt(0, 4) > 1 } }
