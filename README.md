@@ -1,4 +1,4 @@
 # Illust logic
 |Controller|Touch|
 |:--:|:--:|
-|<img width="400" alt="controller" src="https://github.com/knz21/logic_base/assets/10508129/8c6e6792-23bb-457f-b5e4-ed305c81101a"/>|<img width="400" alt="touch" src="https://github.com/knz21/logic_base/assets/10508129/72bec884-e714-4797-9c18-765018be3e38"/>|
+|<img width="400" alt="controller" src="https://github.com/knz21/illust-logic/assets/10508129/6d9f0416-f184-4b41-bb2a-23a2c6c8a093"/>|<img width="400" alt="touch" src="https://github.com/knz21/illust-logic/assets/10508129/6ac45e3e-a6e9-40d8-b07a-f7afa766f75b"/>|
