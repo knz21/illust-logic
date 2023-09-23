@@ -9,7 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.kenzo.logicbase.ui.theme.LogicBaseTheme
 
-private const val DataSize = 3
+private const val DataSize = 5
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
